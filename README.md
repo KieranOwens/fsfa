@@ -14,7 +14,7 @@
 
 Given a time series measured from a non-stationary process for which variation in dynamical properties is governed by some time-varying parameter (TVP), f-SFA is an unsupervised method for inferring the TVP directly from the time series.
 
-This package provides a python implementation licensed under the [GNU GPL v3 license](http://www.gnu.org/licenses/gpl-3.0.html) (or later).
+This package provides a python implementation licensed under an MIT license.
 
 
 ### Acknowledgement :
