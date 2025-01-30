@@ -21,7 +21,7 @@ This package provides a python implementation licensed under an MIT license.
 
 If you use this software, please read and cite this open-access article:
 
-- &#x1F4D7; Owens et al. [Parameter inference from a non-stationary unknown process using statistical feature-based slow feature analysis](url), _arXiv_ (2025).
+- &#x1F4D7; Owens et al. [Parameter inference from a non-stationary unknown process using statistical feature-based slow feature analysis](url), _arXiv_ (In Preparation).
 
 ## Installation
 
