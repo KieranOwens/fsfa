@@ -1,0 +1,33 @@
+[project]
+name = "fsfa"
+version = "0.1.0"
+authors = [
+    {name = "Kieran S Owens"},
+    {email = "kowe6911@uni.sydney.edu.au"},
+]
+maintainers = [
+    {name = "Kieran S Owens"},
+    {email = "kowe6911@uni.sydney.edu.au"},
+]
+description = "Feature-based Slow Feature Analysis"
+readme = "README.md"
+license = {text = "GNU General Public License v3 (GPLv3)"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: MIT License",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "numpy",
+    "pandas",
+    "pycatch22",
+    "sklearn-sfa"
+]
+
+[project.urls]
+"GitHub Repository (fsfa)" = "https://github.com/KieranOwens/fsfa"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
