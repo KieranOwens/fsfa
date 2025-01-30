@@ -35,6 +35,8 @@ pip install fsfa
 
 ```python
 import fsfa
+
+# dataset for analysis
 X = np.random.random((10000, 2)) # (or more interesting data)
 
 # option 1: compute a time series of time-series features
