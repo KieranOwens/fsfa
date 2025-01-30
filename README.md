@@ -25,7 +25,7 @@ If you use this software, please read and cite this open-access article:
 
 For details on the parameter inference from a non-stationary unknown process (PINUP) problem see:
 
-- &#x1F4D7; Owens et al. [Parameter inference from a non-stationary unknown process](https://pubs.aip.org/aip/cha/article/34/10/101501/3318432/Parameter-inference-from-a-non-stationary-unknown), _Chaos: An Interdisciplinary Journal of Nonlinear Science_ (2024).
+- &#x1F4D7; Owens et al. [Parameter inference from a non-stationary unknown process](https://doi.org/10.1063/5.0228236), _Chaos: An Interdisciplinary Journal of Nonlinear Science_ (2024).
 
 ## Installation
 
