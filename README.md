@@ -142,6 +142,6 @@ ax.text(800, -2.3, r'$R^2=$' + f'{R2}')
 
 ## Usage notes
 
-- The default time-series featureset used in f-SFA is _catch24_, but there are other keyword options ('mean', 'meanvar', 'quatiles', 'stft', 'catch24'). Alternatively, a list of time-series statistic functions can be passed as a list.
+- The default time-series featureset used in f-SFA is _catch24_, but there are other keyword options ('mean', 'meanvar', 'quantiles', 'stft', 'catch22', 'catch24'). Alternatively, a list of time-series statistic functions can be passed as a list.
 - `fsfa` uses the `sklearn-sfa` package to perform SFA. Keyword arguments to the underlying SFA function can be passed to fSFA using a dictionary. Important SFA arguments can be found in the `sklearn-sfa` documentation, including fill_mode, svd_solver, and robustness_cutoff.
 
