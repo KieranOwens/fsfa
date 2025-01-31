@@ -10,7 +10,7 @@
 
 ## About
 
-[_Feature-based slow feature analysis (f-SFA)_](https://github.com/KieranOwens/fsfa) is an approach to parameter inference from a non-stationary unknown process ([PINUP](https://arxiv.org/abs/2407.08987)) comprising sliding-window computation of multivariate time series of canonical time-series features followed by dimension reduction using slow feature analysis.
+[_Feature-based slow feature analysis (f-SFA)_](https://github.com/KieranOwens/fsfa) is an approach to parameter inference from a non-stationary unknown process ([PINUP](https://doi.org/10.1063/5.0228236)) comprising sliding-window computation of multivariate time series of canonical time-series features followed by dimension reduction using slow feature analysis.
 
 Given a time series measured from a non-stationary process for which variation in dynamical properties is governed by some time-varying parameter (TVP), f-SFA is an unsupervised method for inferring the TVP directly from the time series.
 
