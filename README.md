@@ -23,7 +23,7 @@ If you use this software, please read and cite this open-access article:
 
 - &#x1F4D7; Owens et al. [Parameter inference from a non-stationary unknown process using statistical feature-based slow feature analysis](url), _arXiv_ (In Preparation).
 
-For details on the parameter inference from a non-stationary unknown process (PINUP) problem see:
+For for a definition and literature review of the parameter inference from a non-stationary unknown process (PINUP) problem see:
 
 - &#x1F4D7; Owens & Fulcher [Parameter inference from a non-stationary unknown process](https://doi.org/10.1063/5.0228236), _Chaos: An Interdisciplinary Journal of Nonlinear Science_ (2024).
 
