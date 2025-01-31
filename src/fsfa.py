@@ -10,7 +10,6 @@ import pandas as pd
 from pycatch22 import catch22_all
 import catch22_C
 from sksfa import SFA
-from features import get_default_features
 
 ##############################################################################
 # 2. Features
