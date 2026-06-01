@@ -10,7 +10,7 @@
 
 ## About
 
-[_Feature-based slow feature analysis (f-SFA)_](https://github.com/KieranOwens/fsfa) is an approach to parameter inference from a non-stationary unknown process ([PINUP](https://doi.org/10.1063/5.0228236)) comprising sliding-window computation of multivariate time series of canonical time-series features followed by dimension reduction using slow feature analysis.
+[_Feature-based slow feature analysis (f-SFA)_](https://github.com/KieranOwens/fsfa) is an approach to parameter inference from a non-stationary unknown process ([PINUP](https://arxiv.org/abs/2407.08987)) comprising sliding-window computation of multivariate time series of canonical time-series features followed by dimension reduction using slow feature analysis.
 
 Given a time series measured from a non-stationary process for which variation in dynamical properties is governed by some time-varying parameter (TVP), f-SFA is an unsupervised method for inferring the TVP directly from the time series.
 
@@ -23,9 +23,9 @@ If you use this software, please read and cite this open-access article:
 
 - &#x1F4D7; Owens et al. [Parameter inference from a non-stationary unknown process using statistical feature-based slow feature analysis](url), _arXiv_ (In Preparation).
 
-For for a definition and literature review of the parameter inference from a non-stationary unknown process (PINUP) problem see:
+For details on the parameter inference from a non-stationary unknown process (PINUP) problem see:
 
-- &#x1F4D7; Owens & Fulcher [Parameter inference from a non-stationary unknown process](https://doi.org/10.1063/5.0228236), _Chaos: An Interdisciplinary Journal of Nonlinear Science_ (2024).
+- &#x1F4D7; Owens et al. [Parameter inference from a non-stationary unknown process](https://doi.org/10.1063/5.0228236), _Chaos: An Interdisciplinary Journal of Nonlinear Science_ (2024).
 
 ## Installation
 
@@ -140,8 +140,33 @@ ax.text(800, -2.3, r'$R^2=$' + f'{R2}')
 
 <p align="center"><img src="img/fsfa.png" height="200"/></p>
 
+
 ## Usage notes
 
 - The default time-series featureset used in f-SFA is _catch24_, but there are other keyword options ('mean', 'meanvar', 'quantiles', 'stft', 'catch22', 'catch24'). Alternatively, a list of time-series statistic functions can be passed as a list.
 - `fsfa` uses the `sklearn-sfa` package to perform SFA. Keyword arguments to the underlying SFA function can be passed to fSFA using a dictionary. Important SFA arguments can be found in the `sklearn-sfa` documentation, including fill_mode, svd_solver, and robustness_cutoff.
+
+Examples of feature embedding using different feature sets:
+
+```python
+
+# custom features
+df = fsfa.feature_embedding(X, window=1000, stride=100, featureset=[np.mean, np.var, np.median])
+
+# mean and variance
+df = fsfa.feature_embedding(X, window=1000, stride=100, featureset='meanvar')
+
+# quantiles
+df = fsfa.feature_embedding(X, window=1000, stride=100, featureset='quantiles', nb_quantiles=20)
+
+# stft bandpower
+df = fsfa.feature_embedding(X, window=1000, stride=100, featureset='stft', stft_fs_window=20)
+
+# catch22
+df = fsfa.feature_embedding(X, window=1000, stride=100, featureset='catch22')
+
+# catch24
+df = fsfa.feature_embedding(X, window=1000, stride=100, featureset='catch24')
+
+```
 
