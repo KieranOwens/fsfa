@@ -116,7 +116,7 @@ def feature_embedding(X,
                       variablenames=None,
                       nb_quantiles=20,
                       fs=1.0,
-                      stft_stride=1,
+                      stft_fs_window=1,
                       verbose=False):
     """
     Given a (possibly multivariate) time series input, extract a (possibly multivariate)
@@ -167,8 +167,9 @@ def feature_embedding(X,
         Fourier transform (STFT).
         Default: 1.0.
 
-    stft_stride: int
-        If set to N it returns every Nth STFT frequency feature. 
+    stft_fs_window: int
+        Sums frequency bands in the STFT spectrogram by averaging over 
+        stft_fs_window adjacent frequencies.
         Default: 1.
         
     Returns
@@ -189,7 +190,7 @@ def feature_embedding(X,
     # features
     ###############
 
-    if featureset in FEATURE_DICT:
+    if isinstance(featureset, str) and featureset in FEATURE_DICT:
 
         featurenames = FEATURE_DICT[featureset]['names']
 
@@ -246,19 +247,30 @@ def feature_embedding(X,
             # Compute the spectrogram power spectrum
             sxx = np.abs(zxx) ** 2
 
+            # proportional power
+            sxx = sxx / np.sum(sxx, axis=0)
+
+            # sum frequency bands
+            if stft_fs_window > 1:
+                n, k = sxx.shape
+                sxx_sum = np.zeros((k, n//stft_fs_window))
+                for j in range(n//stft_fs_window):
+                        sxx_sum[:,j] = np.sum(sxx.T[:,j*stft_fs_window:(j+1)*stft_fs_window], axis=1)
+                sxx = sxx_sum.T
+
             # Convert the power spectrum to decibels (dB)
             sxx_db = 20 * np.log(sxx / np.amax(sxx))
 
-            F += [sxx_db[::stft_stride,:].T]
+            F += [sxx_db.T]
 
-        featurenames = [f'{var}_fx_{fx}' for var in variablenames 
-                                      for fx in f[::stft_stride]]
+        featurenames = [f'{var}_fx_{fx1}_{fx2}' for var in variablenames 
+                                      for (fx1, fx2) in zip(f[::stft_fs_window], f[stft_fs_window::stft_fs_window])]
 
         F = pd.DataFrame(data=np.concatenate(F, axis=1), 
                          columns=featurenames)
     
     # or compute catch22/24 
-    elif featureset in ['catch22', 'catch24']:
+    elif isinstance(featureset, str) and featureset in ['catch22', 'catch24']:
 
         catch24 = (featureset == 'catch24')
 
@@ -312,7 +324,7 @@ def fSFA(X,
          variablenames=None,
          nb_quantiles=20,
          fs=1.0,
-         stft_stride=1,
+         stft_fs_window=1,
          n_components=1,
          kwargs = dict(),
          verbose=False):
@@ -373,8 +385,9 @@ def fSFA(X,
         Fourier transform (STFT).
         Default: 1.0.
 
-    stft_stride: int
-        If set to N it returns every Nth STFT frequency feature. 
+    stft_fs_window: int
+        Sums frequency bands in the STFT spectrogram by averaging over 
+        stft_fs_window adjacent frequencies.
         Default: 1.
 
     n_components: int
@@ -403,7 +416,7 @@ def fSFA(X,
                           variablenames=variablenames,
                           nb_quantiles=nb_quantiles,
                           fs=fs,
-                          stft_stride=stft_stride,
+                          stft_fs_window=stft_fs_window,
                           verbose=verbose)
 
     return SFA(n_components=n_components, **kwargs).fit_transform(F)
