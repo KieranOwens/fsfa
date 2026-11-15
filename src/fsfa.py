@@ -8,7 +8,6 @@ import numpy as np
 from scipy.signal import stft
 import pandas as pd
 import pycatch22
-from pycatch22 import catch22_all
 from sksfa import SFA
 
 ##############################################################################
@@ -289,26 +288,8 @@ def feature_embedding(X,
 
         F = pd.DataFrame(data=np.concatenate(F, axis=1), 
                          columns=featurenames)
-    
-    # or compute catch22/24 
-    elif isinstance(featureset, str) and featureset in ['catch22', 'catch24']:
 
-        catch24 = (featureset == 'catch24')
-
-        F = []
-
-        for i in range(D):
-            Fi = np.array([catch22_all(X[idx, i], catch24=catch24)['values'] for idx in window_indices])
-            F.append(Fi)
-
-        featurenames = [f'{var}_{name}' for var in variablenames 
-                                      for name in featurenames]
-        
-        F = pd.DataFrame(data=np.concatenate(F, axis=1), 
-                         columns=featurenames)
-
-
-    # or compute from a list of features
+    # or compute from a list of features (including the catch22 and catch24 sets)
     else:
 
         # dictionary to store time series of statistics
