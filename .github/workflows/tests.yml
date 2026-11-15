@@ -1,0 +1,24 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # fsfa supports pycatch22 before and after its v1.0 API change
+        pycatch22: ["<1.0", ">=1.0"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install "pycatch22${{ matrix.pycatch22 }}" numpy pandas scipy sklearn-sfa pytest
+      - name: Run tests
+        run: pytest
