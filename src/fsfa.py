@@ -284,8 +284,12 @@ def feature_embedding(X,
 
             F += [sxx_db.T]
 
-        featurenames = [f'{var}_fx_{fx1}_{fx2}' for var in variablenames 
-                                      for (fx1, fx2) in zip(f[::stft_fs_window], f[stft_fs_window::stft_fs_window])]
+        # band j covers bins j*w .. (j+1)*w - 1 and is named by the frequencies
+        # f[j*w] and f[(j+1)*w], or f[-1] when (j+1)*w is past the last bin
+        w = stft_fs_window
+        bands = [(f[j*w], f[min((j + 1)*w, len(f) - 1)]) for j in range(len(f)//w)]
+        featurenames = [f'{var}_fx_{fx1}_{fx2}' for var in variablenames
+                                      for (fx1, fx2) in bands]
 
         F = pd.DataFrame(data=np.concatenate(F, axis=1), 
                          columns=featurenames)
