@@ -7,8 +7,8 @@
 import numpy as np
 from scipy.signal import stft
 import pandas as pd
+import pycatch22
 from pycatch22 import catch22_all
-import catch22_C
 from sksfa import SFA
 
 ##############################################################################
@@ -62,6 +62,27 @@ features_cm16 = [
 	    ]
 
 
+def _catch22_functions(names):
+    """
+    Return the pycatch22 single-feature functions for the given (pre-v1.0) catch22
+    feature names, in the same order.
+
+    pycatch22 < 1.0 exposes one function per feature in the compiled catch22_C module.
+    pycatch22 >= 1.0 removed these from catch22_C and instead exposes them in the
+    pycatch22 package, under catch22 v1.0 names (the old names remain only as
+    deprecated aliases), so look them up by their current names.
+    """
+    if hasattr(pycatch22, 'feature_table'):
+        current_name = {f['legacy_name']: f['name'] for f in pycatch22.feature_table(catch24=True)}
+        return [getattr(pycatch22, current_name.get(name, name)) for name in names]
+
+    import catch22_C
+    return [getattr(catch22_C, name) for name in names]
+
+
+f_catch22 = _catch22_functions(features_c22)
+
+
 FEATURE_DICT = {
     'catch24': {'names': ['mode_5', 'mode_10', 'acf_timescale', 'acf_first_min', 'ami2',
                     'trev', 'high_fluctuation', 'stretch_high', 'transition_matrix', 
@@ -69,7 +90,7 @@ FEATURE_DICT = {
                     'outlier_timing_pos', 'outlier_timing_neg', 'centroid_freq',
                     'stretch_decreasing', 'entropy_pairs', 'rs_range', 'dfa', 
                     'low_freq_power', 'forecast_error', 'mean', 'std'],
-                'features': [getattr(catch22_C, f) for f in features_c22] + [np.mean, np.var]},
+                'features': f_catch22 + [np.mean, np.var]},
 
     'catch22': {'names': ['mode_5', 'mode_10', 'acf_timescale', 'acf_first_min', 'ami2',
                     'trev', 'high_fluctuation', 'stretch_high', 'transition_matrix', 
@@ -77,7 +98,7 @@ FEATURE_DICT = {
                     'outlier_timing_pos', 'outlier_timing_neg', 'centroid_freq',
                     'stretch_decreasing', 'entropy_pairs', 'rs_range', 'dfa', 
                     'low_freq_power', 'forecast_error'],
-                'features': [getattr(catch22_C, f) for f in features_c22]},
+                'features': f_catch22},
 
     'meanvar': {'names': ['mean', 'variance'], 
                 'features': [np.mean, np.var]},
@@ -117,7 +138,8 @@ def feature_embedding(X,
                       nb_quantiles=20,
                       fs=1.0,
                       stft_fs_window=1,
-                      verbose=False):
+                      verbose=False,
+                      stft_nb_bands=None):
     """
     Given a (possibly multivariate) time series input, extract a (possibly multivariate)
     time series of statistical time-series features.
@@ -134,12 +156,15 @@ def feature_embedding(X,
         The stride length used for sliding window computation of statistics, i.e.,
         the number array indices between each adjacent window.
 
-    featureset: str or list of functions
+    featureset: str, list of str, or list of functions
         A time-series feature set can be specified using a string, with options
         'mean', 'meanvar', 'quantiles', 'stft', 'catch22', 'catch24', and
         'catchaMouse16' .The catchaMouse options require separate installation 
         of the catchaMouse16 package. Alternatively, a list of time-series 
-        statistical functions can be provided.
+        statistical functions can be provided. Several of the feature sets
+        named above can also be combined by giving a list of their names,
+        e.g., ['stft', 'quantiles'], in which case the features of each set
+        are computed and returned together.
         Default: 'catch24'.
 
     featurenames: list of strings
@@ -171,11 +196,61 @@ def feature_embedding(X,
         Sums frequency bands in the STFT spectrogram by averaging over 
         stft_fs_window adjacent frequencies.
         Default: 1.
+
+    stft_nb_bands: int
+        The number of frequency bands to compute from the STFT spectrogram, as
+        an alternative to giving their width with stft_fs_window. The
+        frequencies are divided into stft_nb_bands bands of equal width (or as
+        near to it as possible) and the power in each band is summed.
+        Default: None (the bands are set by stft_fs_window).
         
     Returns
     -------
     A time series of statistical time-series features,
     """
+
+    ###############
+    # named feature sets
+    ###############
+
+    named_sets = list(FEATURE_DICT) + ['quantiles', 'stft']
+
+    def check_name(name):
+        if name not in named_sets:
+            raise ValueError(f"Unknown feature set '{name}'. "
+                             f"The available feature sets are: {named_sets}.")
+
+    if isinstance(featureset, str):
+
+        check_name(featureset)
+
+    # several named feature sets: compute each one and join their columns
+    elif any(isinstance(f, str) for f in featureset):
+
+        if not all(isinstance(f, str) for f in featureset):
+            raise TypeError("featureset can be a list of feature set names or a list of "
+                            "functions, but not a mixture of the two.")
+
+        for name in featureset:
+            check_name(name)
+
+        F = pd.concat([feature_embedding(X, window, stride,
+                                         featureset=name,
+                                         variablenames=variablenames,
+                                         nb_quantiles=nb_quantiles,
+                                         fs=fs,
+                                         stft_fs_window=stft_fs_window,
+                                         verbose=verbose,
+                                         stft_nb_bands=stft_nb_bands)
+                       for name in featureset], axis=1)
+
+        repeated = sorted(set(F.columns[F.columns.duplicated()]))
+
+        if repeated:
+            raise ValueError(f"The feature sets {list(featureset)} have features in "
+                             f"common: {repeated}.")
+
+        return F
 
     # number of samples, number of variables
     T, D = X.shape
@@ -236,6 +311,29 @@ def feature_embedding(X,
 
         noverlap = window - stride
 
+        # the STFT gives this many frequencies
+        n_bins = window // 2 + 1
+
+        # edges[j] is the first frequency bin of band j, and edges[j + 1] is one past its last
+        if stft_nb_bands is not None:
+
+            if stft_fs_window != 1:
+                raise ValueError("Give either stft_nb_bands or stft_fs_window, not both.")
+
+            if not 1 <= stft_nb_bands <= n_bins:
+                raise ValueError(f"stft_nb_bands must be between 1 and {n_bins} (the number "
+                                 f"of frequencies for a window of length {window}).")
+
+            # equal widths, with the lowest bands one bin wider if n_bins does not divide evenly
+            widths = [n_bins // stft_nb_bands + (j < n_bins % stft_nb_bands)
+                      for j in range(stft_nb_bands)]
+            edges = np.concatenate([[0], np.cumsum(widths)])
+
+        else:
+
+            # bands of stft_fs_window bins (any bins left over at the top are not used)
+            edges = np.arange(n_bins // stft_fs_window + 1) * stft_fs_window
+
         F = []
 
         for i in range(D):
@@ -251,20 +349,20 @@ def feature_embedding(X,
             sxx = sxx / np.sum(sxx, axis=0)
 
             # sum frequency bands
-            if stft_fs_window > 1:
-                n, k = sxx.shape
-                sxx_sum = np.zeros((k, n//stft_fs_window))
-                for j in range(n//stft_fs_window):
-                        sxx_sum[:,j] = np.sum(sxx.T[:,j*stft_fs_window:(j+1)*stft_fs_window], axis=1)
-                sxx = sxx_sum.T
+            if stft_nb_bands is not None or stft_fs_window > 1:
+                sxx = np.stack([np.sum(sxx.T[:,a:b], axis=1)
+                                for a, b in zip(edges[:-1], edges[1:])])
 
             # Convert the power spectrum to decibels (dB)
             sxx_db = 20 * np.log(sxx / np.amax(sxx))
 
             F += [sxx_db.T]
 
-        featurenames = [f'{var}_fx_{fx1}_{fx2}' for var in variablenames 
-                                      for (fx1, fx2) in zip(f[::stft_fs_window], f[stft_fs_window::stft_fs_window])]
+        # a band is named by the frequency of its first bin and that of the next band's
+        # first bin, or the last frequency when there is no bin past the band
+        bands = [(f[a], f[min(b, n_bins - 1)]) for a, b in zip(edges[:-1], edges[1:])]
+        featurenames = [f'{var}_fx_{fx1}_{fx2}' for var in variablenames
+                                      for (fx1, fx2) in bands]
 
         F = pd.DataFrame(data=np.concatenate(F, axis=1), 
                          columns=featurenames)
@@ -327,7 +425,8 @@ def fSFA(X,
          stft_fs_window=1,
          n_components=1,
          kwargs = dict(),
-         verbose=False):
+         verbose=False,
+         stft_nb_bands=None):
     """
     Feature-based Slow Feature Analysis (f-SFA) is an approach to Parameter
     Inference from a Non-stationary Unknown Process (PINUP), involving 
@@ -352,12 +451,15 @@ def fSFA(X,
         The stride length used for sliding window computation of statistics, i.e.,
         the number array indices between each adjacent window.
 
-    featureset: str or list of functions
+    featureset: str, list of str, or list of functions
         A time-series feature set can be specified using a string, with options
         'mean', 'meanvar', 'quantiles', 'stft', 'catch22', 'catch24', and
         'catchaMouse16' .The catchaMouse options require separate installation 
         of the catchaMouse16 package. Alternatively, a list of time-series 
-        statistical functions can be provided.
+        statistical functions can be provided. Several of the feature sets
+        named above can also be combined by giving a list of their names,
+        e.g., ['stft', 'quantiles'], in which case the features of each set
+        are computed and returned together.
         Default: 'catch24'.
 
     featurenames: list of strings
@@ -390,6 +492,13 @@ def fSFA(X,
         stft_fs_window adjacent frequencies.
         Default: 1.
 
+    stft_nb_bands: int
+        The number of frequency bands to compute from the STFT spectrogram, as
+        an alternative to giving their width with stft_fs_window. The
+        frequencies are divided into stft_nb_bands bands of equal width (or as
+        near to it as possible) and the power in each band is summed.
+        Default: None (the bands are set by stft_fs_window).
+
     n_components: int
         The number of components to return in the SFA dimension reduction step.
         default: 1
@@ -417,6 +526,7 @@ def fSFA(X,
                           nb_quantiles=nb_quantiles,
                           fs=fs,
                           stft_fs_window=stft_fs_window,
-                          verbose=verbose)
+                          verbose=verbose,
+                          stft_nb_bands=stft_nb_bands)
 
     return SFA(n_components=n_components, **kwargs).fit_transform(F)

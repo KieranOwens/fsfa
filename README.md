@@ -162,11 +162,17 @@ df = fsfa.feature_embedding(X, window=1000, stride=100, featureset='quantiles', 
 # stft bandpower
 df = fsfa.feature_embedding(X, window=1000, stride=100, featureset='stft', stft_fs_window=20)
 
+# stft bandpower in a given number of frequency bands
+df = fsfa.feature_embedding(X, window=1000, stride=100, featureset='stft', stft_nb_bands=10)
+
 # catch22
 df = fsfa.feature_embedding(X, window=1000, stride=100, featureset='catch22')
 
 # catch24
 df = fsfa.feature_embedding(X, window=1000, stride=100, featureset='catch24')
+
+# several feature sets together (here, spectral and distributional features)
+df = fsfa.feature_embedding(X, window=1000, stride=100, featureset=['stft', 'quantiles'], stft_nb_bands=10)
 
 ```
 
