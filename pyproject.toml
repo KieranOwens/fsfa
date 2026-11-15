@@ -1,6 +1,6 @@
 [project]
 name = "fsfa"
-version = "0.2.1"
+version = "0.2.4"
 authors = [
     {name = "Kieran S Owens", email = "kowe6911@uni.sydney.edu.au"},
 ]
@@ -27,3 +27,7 @@ dependencies = [
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

@@ -7,8 +7,8 @@
 import numpy as np
 from scipy.signal import stft
 import pandas as pd
+import pycatch22
 from pycatch22 import catch22_all
-import catch22_C
 from sksfa import SFA
 
 ##############################################################################
@@ -62,6 +62,42 @@ features_cm16 = [
 	    ]
 
 
+def _catch22_functions(names):
+    """
+    Return the pycatch22 single-feature functions for the given (pre-v1.0) catch22
+    feature names, in the same order.
+
+    pycatch22 < 1.0 exposes one function per feature in the compiled catch22_C module.
+    pycatch22 >= 1.0 removed these from catch22_C and instead exposes them in the
+    pycatch22 package, under catch22 v1.0 names (the old names remain only as
+    deprecated aliases), so look them up by their current names.
+
+    The pycatch22 >= 1.0 functions take a mask_nans argument, which defaults to True
+    and replaces a feature that cannot be estimated (e.g., on a constant window) by a
+    fixed placeholder value. The returned functions call them with mask_nans=False,
+    so such features are NaN instead (pycatch22 < 1.0 also gives NaN for most of
+    them), and a window with undefined features is not silently passed on to SFA as
+    ordinary numbers.
+    """
+    if hasattr(pycatch22, 'feature_table'):
+        current_name = {f['legacy_name']: f['name'] for f in pycatch22.feature_table(catch24=True)}
+
+        def unmasked(f):
+            def g(data):
+                return f(data, mask_nans=False)
+            g.__name__ = g.__qualname__ = f.__name__
+            g.__doc__ = f.__doc__
+            return g
+
+        return [unmasked(getattr(pycatch22, current_name.get(name, name))) for name in names]
+
+    import catch22_C
+    return [getattr(catch22_C, name) for name in names]
+
+
+f_catch22 = _catch22_functions(features_c22)
+
+
 FEATURE_DICT = {
     'catch24': {'names': ['mode_5', 'mode_10', 'acf_timescale', 'acf_first_min', 'ami2',
                     'trev', 'high_fluctuation', 'stretch_high', 'transition_matrix', 
@@ -69,7 +105,7 @@ FEATURE_DICT = {
                     'outlier_timing_pos', 'outlier_timing_neg', 'centroid_freq',
                     'stretch_decreasing', 'entropy_pairs', 'rs_range', 'dfa', 
                     'low_freq_power', 'forecast_error', 'mean', 'std'],
-                'features': [getattr(catch22_C, f) for f in features_c22] + [np.mean, np.var]},
+                'features': f_catch22 + [np.mean, np.var]},
 
     'catch22': {'names': ['mode_5', 'mode_10', 'acf_timescale', 'acf_first_min', 'ami2',
                     'trev', 'high_fluctuation', 'stretch_high', 'transition_matrix', 
@@ -77,7 +113,7 @@ FEATURE_DICT = {
                     'outlier_timing_pos', 'outlier_timing_neg', 'centroid_freq',
                     'stretch_decreasing', 'entropy_pairs', 'rs_range', 'dfa', 
                     'low_freq_power', 'forecast_error'],
-                'features': [getattr(catch22_C, f) for f in features_c22]},
+                'features': f_catch22},
 
     'meanvar': {'names': ['mean', 'variance'], 
                 'features': [np.mean, np.var]},
