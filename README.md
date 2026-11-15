@@ -2,7 +2,7 @@
 
 <p align="center">
     <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg" height="20"/></a>
- 	  <a href="https://twitter.com/compTimeSeries"><img src="https://img.shields.io/twitter/url/https/twitter.com/compTimeSeries.svg?style=social&label=Follow%20%40compTimeSeries" height="20"/></a>
+ 	  <a href="https://pypi.org/project/fsfa/"><img src="https://img.shields.io/pypi/v/fsfa.svg" height="20"/></a>
 </p>
 
 
@@ -21,7 +21,7 @@ This package provides a python implementation licensed under an MIT license.
 
 If you use this software, please read and cite this open-access article:
 
-- &#x1F4D7; Owens et al. [Parameter inference from a non-stationary unknown process using statistical feature-based slow feature analysis](url), _arXiv_ (In Preparation).
+- &#x1F4D7; Owens et al. [Parameter inference from a non-stationary unknown process using statistical feature-based slow feature analysis](https://arxiv.org/abs/2609.01651), _arXiv_ (2026).
 
 For details on the parameter inference from a non-stationary unknown process (PINUP) problem see:
 
