@@ -71,10 +71,25 @@ def _catch22_functions(names):
     pycatch22 >= 1.0 removed these from catch22_C and instead exposes them in the
     pycatch22 package, under catch22 v1.0 names (the old names remain only as
     deprecated aliases), so look them up by their current names.
+
+    The pycatch22 >= 1.0 functions take a mask_nans argument, which defaults to True
+    and replaces a feature that cannot be estimated (e.g., on a constant window) by a
+    fixed placeholder value. The returned functions call them with mask_nans=False,
+    so such features are NaN instead (pycatch22 < 1.0 also gives NaN for most of
+    them), and a window with undefined features is not silently passed on to SFA as
+    ordinary numbers.
     """
     if hasattr(pycatch22, 'feature_table'):
         current_name = {f['legacy_name']: f['name'] for f in pycatch22.feature_table(catch24=True)}
-        return [getattr(pycatch22, current_name.get(name, name)) for name in names]
+
+        def unmasked(f):
+            def g(data):
+                return f(data, mask_nans=False)
+            g.__name__ = g.__qualname__ = f.__name__
+            g.__doc__ = f.__doc__
+            return g
+
+        return [unmasked(getattr(pycatch22, current_name.get(name, name))) for name in names]
 
     import catch22_C
     return [getattr(catch22_C, name) for name in names]
