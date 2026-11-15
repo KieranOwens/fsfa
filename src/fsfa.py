@@ -7,8 +7,7 @@
 import numpy as np
 from scipy.signal import stft
 import pandas as pd
-from pycatch22 import catch22_all
-import catch22_C
+import pycatch22
 from sksfa import SFA
 
 ##############################################################################
@@ -62,6 +61,27 @@ features_cm16 = [
 	    ]
 
 
+def _catch22_functions(names):
+    """
+    Return the pycatch22 single-feature functions for the given (pre-v1.0) catch22
+    feature names, in the same order.
+
+    pycatch22 < 1.0 exposes one function per feature in the compiled catch22_C module.
+    pycatch22 >= 1.0 removed these from catch22_C and instead exposes them in the
+    pycatch22 package, under catch22 v1.0 names (the old names remain only as
+    deprecated aliases), so look them up by their current names.
+    """
+    if hasattr(pycatch22, 'feature_table'):
+        current_name = {f['legacy_name']: f['name'] for f in pycatch22.feature_table(catch24=True)}
+        return [getattr(pycatch22, current_name.get(name, name)) for name in names]
+
+    import catch22_C
+    return [getattr(catch22_C, name) for name in names]
+
+
+f_catch22 = _catch22_functions(features_c22)
+
+
 FEATURE_DICT = {
     'catch24': {'names': ['mode_5', 'mode_10', 'acf_timescale', 'acf_first_min', 'ami2',
                     'trev', 'high_fluctuation', 'stretch_high', 'transition_matrix', 
@@ -69,7 +89,7 @@ FEATURE_DICT = {
                     'outlier_timing_pos', 'outlier_timing_neg', 'centroid_freq',
                     'stretch_decreasing', 'entropy_pairs', 'rs_range', 'dfa', 
                     'low_freq_power', 'forecast_error', 'mean', 'std'],
-                'features': [getattr(catch22_C, f) for f in features_c22] + [np.mean, np.var]},
+                'features': f_catch22 + [np.mean, np.var]},
 
     'catch22': {'names': ['mode_5', 'mode_10', 'acf_timescale', 'acf_first_min', 'ami2',
                     'trev', 'high_fluctuation', 'stretch_high', 'transition_matrix', 
@@ -77,7 +97,7 @@ FEATURE_DICT = {
                     'outlier_timing_pos', 'outlier_timing_neg', 'centroid_freq',
                     'stretch_decreasing', 'entropy_pairs', 'rs_range', 'dfa', 
                     'low_freq_power', 'forecast_error'],
-                'features': [getattr(catch22_C, f) for f in features_c22]},
+                'features': f_catch22},
 
     'meanvar': {'names': ['mean', 'variance'], 
                 'features': [np.mean, np.var]},
@@ -268,26 +288,8 @@ def feature_embedding(X,
 
         F = pd.DataFrame(data=np.concatenate(F, axis=1), 
                          columns=featurenames)
-    
-    # or compute catch22/24 
-    elif isinstance(featureset, str) and featureset in ['catch22', 'catch24']:
 
-        catch24 = (featureset == 'catch24')
-
-        F = []
-
-        for i in range(D):
-            Fi = np.array([catch22_all(X[idx, i], catch24=catch24)['values'] for idx in window_indices])
-            F.append(Fi)
-
-        featurenames = [f'{var}_{name}' for var in variablenames 
-                                      for name in featurenames]
-        
-        F = pd.DataFrame(data=np.concatenate(F, axis=1), 
-                         columns=featurenames)
-
-
-    # or compute from a list of features
+    # or compute from a list of features (including the catch22 and catch24 sets)
     else:
 
         # dictionary to store time series of statistics
