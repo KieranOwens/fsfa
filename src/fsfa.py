@@ -15,31 +15,38 @@ from sksfa import SFA
 # 2. Features
 ##############################################################################
 
-# catch22 library full feature names
-features_c22 = [
-        'DN_HistogramMode_5',
-        'DN_HistogramMode_10',
-        'CO_f1ecac',
-        'CO_FirstMin_ac',
-        'CO_HistogramAMI_even_2_5',
-        'CO_trev_1_num',
-        'MD_hrv_classic_pnn40',
-        'SB_BinaryStats_mean_longstretch1',
-        'SB_TransitionMatrix_3ac_sumdiagcov',
-        'PD_PeriodicityWang_th0_01',
-        'CO_Embed2_Dist_tau_d_expfit_meandiff',
-        'IN_AutoMutualInfoStats_40_gaussian_fmmi',
-        'FC_LocalSimple_mean1_tauresrat',
-        'DN_OutlierInclude_p_001_mdrmd',
-        'DN_OutlierInclude_n_001_mdrmd',
-        'SP_Summaries_welch_rect_area_5_1',
-        'SB_BinaryStats_diff_longstretch0',
-        'SB_MotifThree_quantile_hh',
-        'SC_FluctAnal_2_rsrangefit_50_1_logi_prop_r1',
-        'SC_FluctAnal_2_dfa_50_1_2_logi_prop_r1',
-        'SP_Summaries_welch_rect_centroid',
-        'FC_LocalSimple_mean3_stderr'
+# catch22 features as (full name, short name) pairs, in output column order.
+# Full names are the pre-v1.0 catch22 names; short names label the output columns.
+CATCH22_FEATURES = [
+        ('DN_HistogramMode_5', 'mode_5'),
+        ('DN_HistogramMode_10', 'mode_10'),
+        ('CO_f1ecac', 'acf_timescale'),
+        ('CO_FirstMin_ac', 'acf_first_min'),
+        ('CO_HistogramAMI_even_2_5', 'ami2'),
+        ('CO_trev_1_num', 'trev'),
+        ('MD_hrv_classic_pnn40', 'high_fluctuation'),
+        ('SB_BinaryStats_mean_longstretch1', 'stretch_high'),
+        ('SB_TransitionMatrix_3ac_sumdiagcov', 'transition_matrix'),
+        ('PD_PeriodicityWang_th0_01', 'periodicity'),
+        ('CO_Embed2_Dist_tau_d_expfit_meandiff', 'embedding_dist'),
+        ('IN_AutoMutualInfoStats_40_gaussian_fmmi', 'ami_timescale'),
+        ('FC_LocalSimple_mean1_tauresrat', 'whiten_timescale'),
+        ('DN_OutlierInclude_p_001_mdrmd', 'outlier_timing_pos'),
+        ('DN_OutlierInclude_n_001_mdrmd', 'outlier_timing_neg'),
+        ('SP_Summaries_welch_rect_area_5_1', 'low_freq_power'),
+        ('SB_BinaryStats_diff_longstretch0', 'stretch_decreasing'),
+        ('SB_MotifThree_quantile_hh', 'entropy_pairs'),
+        ('SC_FluctAnal_2_rsrangefit_50_1_logi_prop_r1', 'rs_range'),
+        ('SC_FluctAnal_2_dfa_50_1_2_logi_prop_r1', 'dfa'),
+        ('SP_Summaries_welch_rect_centroid', 'centroid_freq'),
+        ('FC_LocalSimple_mean3_stderr', 'forecast_error'),
         ]
+
+# catch22 library full feature names
+features_c22 = [name for name, _ in CATCH22_FEATURES]
+
+# catch22 short feature names, aligned with features_c22
+short_names_c22 = [short for _, short in CATCH22_FEATURES]
 
 # catchaMouse16 full feature names
 features_cm16 = [
@@ -84,21 +91,11 @@ f_catch22 = _catch22_functions(features_c22)
 
 
 FEATURE_DICT = {
-    'catch24': {'names': ['mode_5', 'mode_10', 'acf_timescale', 'acf_first_min', 'ami2',
-                    'trev', 'high_fluctuation', 'stretch_high', 'transition_matrix', 
-                    'periodicity', 'embedding_dist', 'ami_timescale', 'whiten_timescale',
-                    'outlier_timing_pos', 'outlier_timing_neg', 'centroid_freq',
-                    'stretch_decreasing', 'entropy_pairs', 'rs_range', 'dfa', 
-                    'low_freq_power', 'forecast_error', 'mean', 'std'],
+    'catch24': {'names': short_names_c22 + ['mean', 'variance'],
                 'features': f_catch22 + [np.mean, np.var]},
 
-    'catch22': {'names': ['mode_5', 'mode_10', 'acf_timescale', 'acf_first_min', 'ami2',
-                    'trev', 'high_fluctuation', 'stretch_high', 'transition_matrix', 
-                    'periodicity', 'embedding_dist', 'ami_timescale', 'whiten_timescale',
-                    'outlier_timing_pos', 'outlier_timing_neg', 'centroid_freq',
-                    'stretch_decreasing', 'entropy_pairs', 'rs_range', 'dfa', 
-                    'low_freq_power', 'forecast_error'],
-                'features': f_catch22},
+    'catch22': {'names': list(short_names_c22),
+                'features': list(f_catch22)},
 
     'meanvar': {'names': ['mean', 'variance'], 
                 'features': [np.mean, np.var]},
