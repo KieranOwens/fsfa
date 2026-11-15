@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the article below."
+title: "fsfa: feature-based slow feature analysis"
+type: software
+authors:
+  - family-names: Owens
+    given-names: Kieran S.
+repository-code: "https://github.com/KieranOwens/fsfa"
+url: "https://pypi.org/project/fsfa/"
+license: MIT
+keywords:
+  - time series
+  - non-stationarity
+  - slow feature analysis
+  - parameter inference
+preferred-citation:
+  type: article
+  title: "Parameter inference from a non-stationary unknown process using statistical feature-based slow feature analysis"
+  authors:
+    - family-names: Owens
+      given-names: Kieran S.
+    - family-names: Tamaki
+      given-names: Masako
+    - family-names: Fulcher
+      given-names: Ben D.
+  journal: "arXiv"
+  year: 2026
+  month: 8
+  doi: 10.48550/arXiv.2609.01651
+  url: "https://arxiv.org/abs/2609.01651"
